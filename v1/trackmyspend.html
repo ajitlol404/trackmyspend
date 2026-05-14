@@ -56,7 +56,7 @@
 
         .hover-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
         }
 
         .btn {
@@ -108,6 +108,11 @@
                                 <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#budgetModal">
                                     ➕Add
                                 </a>
+                            </li>
+                            <li>
+                                <button class="dropdown-item text-danger" id="deleteBudgetBtn">
+                                    🗑️Delete
+                                </button>
                             </li>
                         </ul>
                     </li>
@@ -209,9 +214,6 @@
             </div>
         </div>
         <div class="row my-3">
-            <div class="col-12 col-md">
-                <div class="accordion" id="dateAccordion"></div>
-            </div>
             <div class="col-12 col-md mt-2 mt-md-0">
                 <!-- TOP CARDS -->
                 <div class="row g-2 mb-3">
@@ -298,6 +300,9 @@
                     </div>
                 </div>
             </div>
+            <div class="col-12 col-md">
+                <div class="accordion" id="dateAccordion"></div>
+            </div>
         </div>
     </div>
 
@@ -312,19 +317,19 @@
                 <div class="modal-body">
                     <form id="budgetForm">
                         <div class="mb-3">
-                            <label class="form-label" for="budgetAmount">💰Amount</label>
+                            <label class="form-label" for="budgetAmount">💰Amount:</label>
                             <input type="number" id="budgetAmount" class="form-control form-control-sm"
                                 placeholder="💰Enter total budget (₹)" step="0.1" required />
                         </div>
                         <div class="row g-2">
                             <div class="col-6">
-                                <label class="form-label" for="startDate">📅From</label>
+                                <label class="form-label" for="startDate">📅From:</label>
                                 <input type="date" id="startDate" class="form-control form-control-sm" lang="en-GB"
                                     required />
                             </div>
 
                             <div class="col-6">
-                                <label class="form-label" for="endDate">🏁To</label>
+                                <label class="form-label" for="endDate">🏁To:</label>
                                 <input type="date" id="endDate" class="form-control form-control-sm" lang="en-GB"
                                     required />
                             </div>
@@ -488,6 +493,7 @@
             elements.budgetForm.addEventListener("submit", handleBudgetFormSubmit);
             document.getElementById("startDate").addEventListener("change", handleStartDateChange);
             document.getElementById("endDate").addEventListener("change", handleEndDateChange);
+            document.getElementById("deleteBudgetBtn").addEventListener("click", deleteBudget);
 
             // Transaction
             initializeTransactionForm();
@@ -546,6 +552,39 @@
         function toggleDarkMode() {
             const current = document.documentElement.getAttribute("data-bs-theme");
             applyTheme(current === "dark" ? "light" : "dark");
+        }
+
+        function deleteBudget() {
+
+            if (!data.budget || !data.budget.amount) {
+                alert("⚠️No active budget found");
+                return;
+            }
+
+            const confirmed = confirm("⚠️Deleting the budget will also delete all transactions. Are you sure you want to proceed?");
+
+            if (!confirmed) return;
+
+            // Reset budget
+            data.budget = {
+                id: null,
+                amount: 0,
+                startDate: null,
+                endDate: null
+            };
+
+            // Delete all transactions
+            data.transactions = [];
+
+            // Save changes
+            saveData();
+
+            // Reset UI
+            initializeTransactionForm();
+
+            renderTransactions();
+
+            updateDashboard();
         }
 
         // user button click
