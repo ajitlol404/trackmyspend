@@ -1,0 +1,2698 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Track My Spend v2</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"
+        defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.10.0/dist/countUp.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js" defer></script>
+
+    <style>
+        html {
+            font-size: 90%;
+        }
+
+        body {
+            font-family: "Roboto", sans-serif;
+            font-optical-sizing: auto;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .text-capitalize {
+            text-transform: capitalize;
+        }
+
+        .text-break {
+            word-break: break-word;
+        }
+
+        .accordion-item {
+            overflow: hidden;
+            border: 1px solid var(--bs-secondary);
+        }
+
+        .accordion-item:not(:first-of-type) {
+            border-top: 1px solid var(--bs-secondary);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+        }
+
+        .heartbeat {
+            display: inline-block;
+            animation: heartbeat 1.5s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        #remaining_per_day_card,
+        #budget_per_day_card {
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.1;
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            14% {
+                transform: scale(1.25);
+            }
+
+            28% {
+                transform: scale(1);
+            }
+
+            42% {
+                transform: scale(1.25);
+            }
+
+            70% {
+                transform: scale(1);
+            }
+        }
+
+        /* Common Hover Effect */
+        .hover-effect,
+        .btn {
+            transition: all 0.25s ease;
+        }
+
+        .hover-effect:hover,
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .hover-effect:active,
+        .btn:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+
+<body>
+    <nav
+        class="navbar navbar-expand-lg bg-body-tertiary border border-secondary shadow-sm sticky-top rounded-4 mt-3 mx-3">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#" id="brand_logo_anchor"><i
+                    class="fa-solid fa-money-bill-trend-up text-success"></i>&nbsp;Track My Spend</a>
+            <button class="navbar-toggler border border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbar_supported_content_div" aria-controls="navbar_supported_content_div"
+                aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar_supported_content_div">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-briefcase text-primary"></i>&nbsp;Budget
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="dropdown-item" id="add_budget_btn">
+                                    <i class="fa-solid fa-circle-plus"></i>&nbsp;Add
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" id="edit_budget_btn">
+                                    <i class="fa-solid fa-pen-to-square text-primary"></i>&nbsp;Edit
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item text-danger" id="delete_budget_btn">
+                                    <i class="fa-solid fa-trash"></i>&nbsp;Delete
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" id="view_budget_btn" data-bs-toggle="modal"
+                                    data-bs-target="#budgetDetailsModal">
+                                    <i class="fa-solid fa-eye text-info"></i>&nbsp;Budgets
+                                </button>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-file-export text-success"></i>&nbsp;Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li>
+                                <button class="dropdown-item" id="export_json_btn">
+                                    <i class="fa-solid fa-file-code text-warning"></i>&nbsp;Export JSON
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" id="export_csv_btn">
+                                    <i class="fa-solid fa-file-csv text-success"></i>&nbsp;Export CSV
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" id="export_pdf_btn">
+                                    <i class="fa-solid fa-file-pdf text-danger"></i>&nbsp;Export PDF
+                                </button>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" id="import_json_btn" class="nav-link border-0 bg-transparent">
+                            <i class="fa-solid fa-file-import text-info"></i> &nbsp;Import
+                        </button>
+                        <input type="file" id="import_json_input" accept=".json" hidden>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link cursor-pointer btn-link" data-bs-toggle="modal"
+                            data-bs-target="#compareBudgetModal" onKeyDown="if(event.key==='Enter') this.click()">
+                            <i class="fa-solid fa-code-compare text-warning"></i>
+                            &nbsp;Compare
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link cursor-pointer btn-link" id="search_nav_btn" tabindex="0"
+                            onKeyDown="if(event.key==='Enter') this.click()">
+                            <i class="fa-solid fa-magnifying-glass text-secondary"></i>&nbsp;Search
+                        </button>
+                    </li>
+                </ul>
+                <div
+                    class="ms-auto d-flex align-items-center gap-2 mt-2 mt-sm-0 justify-content-between justify-content-sm-start">
+                    <select id="budget_select"
+                        class="form-select form-select-sm w-auto rounded-pill border border-secondary cursor-pointer d-none d-md-block">
+                    </select>
+                    <button id="theme_toggle_btn" class="btn btn-sm btn-outline-dark fw-semibold rounded-pill px-2">
+                        <i id="theme_icon" class="fa-solid fa-moon"></i>
+                        <span id="theme_text" class="d-none d-md-inline">
+                            Dark
+                        </span>
+                    </button>
+                    <button id="usage_btn"
+                        class="btn btn-sm btn-outline-success fw-semibold rounded-pill d-none d-md-block">
+                        😎 0% Used
+                    </button>
+                    <button id="username_btn"
+                        class="btn btn-sm fw-semibold rounded-pill btn-outline-primary fw-semibold">
+                        <i class="fa-solid fa-user"></i>&nbsp;Hi,&nbsp;<span id="username_display_span"
+                            class="text-capitalize"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3 d-md-none">
+        <div class="row">
+            <div class="col">
+                <select id="mobile_budget_select"
+                    class="form-select form-select-sm rounded-pill border border-secondary text-center cursor-pointer mb-2">
+                </select>
+                <button id="mobile_usage_btn" class="btn btn-sm btn-outline-success fw-semibold rounded-pill w-100">
+                    😎 0% Used
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row my-3">
+            <div class="col">
+                <div class="card shadow-sm p-3 rounded-4 border-secondary">
+                    <form id="transaction_form" class="row g-2 align-items-center" novalidate>
+
+                        <div class="col-12 col-md">
+                            <input id="transaction_form_amount_input" type="number"
+                                class="form-control form-control-sm border border-secondary rounded-4"
+                                placeholder="💰Enter amount (₹)" min="1" step="1" required />
+                        </div>
+
+                        <div class="col-12 col-md">
+                            <select class="form-select form-select-sm cursor-pointer border border-secondary rounded-4"
+                                id="transaction_form_category_select" required></select>
+                        </div>
+
+                        <div class="col-12 col-md">
+                            <input id="transaction_form_date_input" type="date"
+                                class="form-control form-control-sm cursor-pointer border border-secondary rounded-4"
+                                lang="en-GB" required />
+                        </div>
+
+                        <div class="col-12 col-md">
+                            <input id="transaction_form_note_input" type="text"
+                                class="form-control form-control-sm border border-secondary rounded-4"
+                                placeholder="📝Add a note (optional)" />
+                        </div>
+
+                        <div class="col-12 col-md d-flex gap-2">
+                            <button id="cancel_edit_btn" class="btn btn-sm btn-outline-secondary rounded-pill d-none"
+                                type="button">
+                                <i class="fa-solid fa-xmark"></i>&nbsp;Cancel
+                            </button>
+                            <button id="transaction_form_submit_btn"
+                                class="btn btn-sm btn-success rounded-pill flex-grow-1" type="submit">
+                                <i class="fa-solid fa-paper-plane"></i>&nbsp;Add transaction
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-success hover-effect">
+                            <div class="card-body d-flex justify-content-between align-items-center p-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="fs-2 text-success">
+                                        <i class="fa-solid fa-wallet"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">Budget</small>
+                                        <h5 class="mb-0" id="budget_card">₹0</h5>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <small class="mb-0 text-success" id="budget_per_day_card">₹0/day</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-danger hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-danger">
+                                    <i class="fa-solid fa-money-bill-trend-up"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Spent</small>
+                                    <h5 class="mb-0" id="spent_card">
+                                        ₹0
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-primary hover-effect">
+                            <div class="card-body d-flex justify-content-between align-items-center p-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="fs-2 text-primary">
+                                        <i class="fa-solid fa-piggy-bank"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">Remaining</small>
+                                        <h5 class="mb-0" id="remaining_card">₹0</h5>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-primary" id="remaining_per_day_card">
+                                        ₹0/day left
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-warning hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-warning">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Days Left</small>
+                                    <h5 class="mb-0" id="days_left_card">
+                                        0
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-success hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-success">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">You'll Get</small>
+                                    <h5 class="mb-0" id="youll_get_card">
+                                        ₹0
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-danger hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-danger">
+                                    <i class="fa-solid fa-money-check-dollar"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">You'll Pay</small>
+                                    <h5 class="mb-0" id="youll_pay_card">
+                                        ₹0
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-secondary hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Transactions</small>
+                                    <h5 class="mb-0" id="transaction_count_card">
+                                        0
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-warning hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-warning">
+                                    <i class="fa-solid fa-sun"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Today's Spending</small>
+                                    <h5 class="mb-0" id="today_spending_card">
+                                        ₹0
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-danger hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-danger">
+                                    <i id="top_category_icon" class="fa-solid fa-arrow-up"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Top Category</small>
+                                    <h5 class="mb-0" id="top_category_card">
+                                        <small class="text-danger fw-semibold" id="top_category_amount_card">
+                                            ₹0
+                                        </small>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-sm rounded-4 cursor-pointer border-success hover-effect">
+                            <div class="card-body d-flex align-items-center gap-3 p-2">
+                                <div class="fs-2 text-success">
+                                    <i id="lowest_category_icon" class="fa-solid fa-arrow-down"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Lowest Category</small>
+                                    <h5 class="mb-0" id="lowest_category_card">
+                                        <small class="text-success fw-semibold" id="lowest_category_amount_card">
+                                            ₹0
+                                        </small>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow-sm rounded-4 border-secondary">
+                            <div class="card-body">
+                                <h6 class="mb-3">
+                                    <i class="fa-solid fa-chart-pie text-danger"></i>
+                                    Category Breakdown
+                                </h6>
+                                <div class="chart-wrapper">
+                                    <canvas id="category_breakdown_chart_canvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow-sm rounded-4 border-secondary">
+                            <div class="card-body">
+                                <h6 class="mb-3">
+                                    <i class="fa-solid fa-chart-line text-primary"></i>
+                                    Spending Trend
+                                </h6>
+                                <div class="chart-wrapper">
+                                    <canvas id="spending_trend_chart_canvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card shadow-sm rounded-4 border-secondary">
+                            <div class="card-body">
+                                <h6 class="mb-3">
+                                    <i class="fa-solid fa-chart-bar text-success"></i>
+                                    Budget Usage By Category
+                                </h6>
+                                <div class="chart-wrapper">
+                                    <canvas id="category_budget_usage_chart_canvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <!-- Search Bar -->
+                <div class="row mb-2 d-none" id="search_row">
+                    <div class="col">
+                        <div class="card shadow-sm p-2 px-3 rounded-4 border-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass text-secondary"></i>
+                                <input id="search_input" type="text"
+                                    class="form-control form-control-sm border-0 shadow-none bg-transparent"
+                                    placeholder="Search by category, note, amount, date..." autocomplete="off" />
+                                <span id="search_count" class="badge text-bg-secondary rounded-pill d-none"></span>
+                                <button id="search_clear_btn"
+                                    class="btn btn-sm btn-outline-danger rounded-pill d-none px-2 py-0">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion" id="transactions_accordion"> </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="budget_modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+        aria-labelledby="budget_modal_label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="budget_modal_label"><i
+                            class="fa-solid fa-briefcase text-primary"></i>&nbsp;Budget Setup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="budget_form" novalidate>
+                        <div class="mb-2">
+                            <label class="form-label" for="budget_form_amount_input"><i
+                                    class="fa-solid fa-sack-dollar text-success"></i>&nbsp;Amount:</label>
+                            <input type="number" id="budget_form_amount_input" class="form-control form-control-sm"
+                                placeholder="Enter total budget (₹)" step="1" min="1" required />
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label" for="budget_form_start_date_input"><i
+                                        class="fa-solid fa-calendar-days text-primary"></i>&nbsp;From:</label>
+                                <input type="date" id="budget_form_start_date_input"
+                                    class="form-control form-control-sm" lang="en-GB" required />
+                            </div>
+
+                            <div class="col-6">
+                                <label class="form-label" for="budget_form_end_date_input"><i
+                                        class="fa-solid fa-flag-checkered text-danger"></i>&nbsp;To:</label>
+                                <input type="date" id="budget_form_end_date_input" class="form-control form-control-sm"
+                                    lang="en-GB" required />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary rounded-4" data-bs-dismiss="modal"><i
+                            class="fa-solid fa-xmark"></i>&nbsp;Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-success rounded-4" id="budget_form_submit_btn"
+                        form="budget_form"><i class="fa-solid fa-paper-plane"></i>&nbsp;Create Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="budgetDetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content rounded-4">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="mb-0"><i class="fa-solid fa-briefcase text-primary"></i>&nbsp;Budgets</h5>
+                    </div>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3" id="budget_details_container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="compareBudgetModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="mb-0"><i class="fa-solid fa-code-compare text-warning"></i>&nbsp;Budget Comparison
+                        </h5>
+                        <small class="text-muted">Pick 2-5 budgets to compare</small>
+                    </div>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="fw-semibold text-muted">Select Budget</small>
+                                <small id="compare_chip_hint" class="text-muted"></small>
+                            </div>
+                            <div id="compare_chip_container"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-success btn-sm rounded-4"
+                        id="compare_download_csv_btn">
+                        <i class="fa-solid fa-file-csv"></i>&nbsp;Download CSV
+                    </button>
+
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-4" id="compare_download_pdf_btn">
+                        <i class="fa-solid fa-file-pdf"></i>&nbsp;Download PDF
+                    </button>
+
+                    <button type="button" class="btn btn-primary btn-sm rounded-4" id="compare_btn">
+                        <i class="fa-solid fa-code-compare"></i>&nbsp;Compare
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 mt-4 border-top">
+        <div id="footer_tagline" class="small mb-1 fw-medium"></div>
+        <small class="text-secondary">
+            Built with <span class="heartbeat">❤️</span> by AKN • © <span id="footer_year"></span>
+        </small>
+    </footer>
+
+    <script>
+
+        const SPECIAL_CATEGORIES = Object.freeze({
+            BORROW: "Borrow",
+            LEND: "Lend"
+        });
+
+        const COLORS = {
+            success: "bg-success text-white",
+            warning: "bg-warning text-dark",
+            danger: "bg-danger text-white",
+            info: "bg-info text-dark",
+        };
+
+        const ICONS = {
+            success: "fa-solid fa-circle-check",
+            warning: "fa-solid fa-triangle-exclamation",
+            danger: "fa-solid fa-circle-xmark",
+            info: "fa-solid fa-circle-info",
+        };
+
+
+        const STORAGE_KEY = "trackMySpend_Data";
+        const DB_NAME = "TrackMySpendDB";
+        const STORE_NAME = "appData";
+        const MAX_BUDGET_AMOUNT = 10000000;
+
+        const IndexedDBService = {
+            db: null,
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, 1);
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME);
+                        }
+                    };
+
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        this.db.onversionchange = () => {
+                            this.db.close();
+                            location.reload();
+                        };
+                        resolve();
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            },
+
+            async save(key, value) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(STORE_NAME, "readwrite");
+                    tx.objectStore(STORE_NAME).put(value, key);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                    tx.onabort = () => reject(tx.error);
+                });
+            },
+
+            async get(key, defaultValue = null) {
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction(STORE_NAME, "readonly");
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.get(key);
+                    request.onsuccess = () => {
+                        resolve(request.result ?? defaultValue);
+                    };
+                    request.onerror = () => resolve(defaultValue);
+                });
+            },
+
+            async remove(key) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(STORE_NAME, "readwrite");
+                    tx.objectStore(STORE_NAME).delete(key);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+        };
+
+        let data = {
+            theme: "light",
+            maxBudgetAmount: MAX_BUDGET_AMOUNT,
+            username: null,
+            budget: [],
+            categories: [
+                {
+                    name: "Food",
+                    emoji: "🍔",
+                    icon: "fa-burger",
+                    color: "#FF6B35"
+                },
+                {
+                    name: "Groceries",
+                    emoji: "🛒",
+                    icon: "fa-cart-shopping",
+                    color: "#2ECC71"
+                },
+                {
+                    name: "Rent",
+                    emoji: "🏠",
+                    icon: "fa-house",
+                    color: "#3498DB"
+                },
+                {
+                    name: "Utilities",
+                    emoji: "🧾",
+                    icon: "fa-file-invoice",
+                    color: "#F39C12"
+                },
+                {
+                    name: "Electricity",
+                    emoji: "💡",
+                    icon: "fa-lightbulb",
+                    color: "#F1C40F"
+                },
+                {
+                    name: "Water",
+                    emoji: "🚰",
+                    icon: "fa-faucet",
+                    color: "#00BCD4"
+                },
+                {
+                    name: "Internet",
+                    emoji: "🌐",
+                    icon: "fa-globe",
+                    color: "#3F51B5"
+                },
+                {
+                    name: "Transport",
+                    emoji: "🚌",
+                    icon: "fa-bus",
+                    color: "#607D8B"
+                },
+                {
+                    name: "Fuel",
+                    emoji: "⛽",
+                    icon: "fa-gas-pump",
+                    color: "#E74C3C"
+                },
+                {
+                    name: "Shopping",
+                    emoji: "🛍️",
+                    icon: "fa-bag-shopping",
+                    color: "#E91E63"
+                },
+                {
+                    name: "Clothing",
+                    emoji: "👕",
+                    icon: "fa-shirt",
+                    color: "#8E44AD"
+                },
+                {
+                    name: "Entertainment",
+                    emoji: "🎮",
+                    icon: "fa-gamepad",
+                    color: "#9B59B6"
+                },
+                {
+                    name: "Investment",
+                    emoji: "📈",
+                    icon: "fa-chart-line",
+                    color: "#27AE60"
+                },
+                {
+                    name: "Movies",
+                    emoji: "🎬",
+                    icon: "fa-film",
+                    color: "#673AB7"
+                },
+                {
+                    name: "Subscriptions",
+                    emoji: "📺",
+                    icon: "fa-tv",
+                    color: "#795548"
+                },
+                {
+                    name: "Health",
+                    emoji: "🧘",
+                    icon: "fa-heart-pulse",
+                    color: "#16A085"
+                },
+                {
+                    name: "Medical",
+                    emoji: "💊",
+                    icon: "fa-pills",
+                    color: "#E53935"
+                },
+                {
+                    name: "Insurance",
+                    emoji: "🛡️",
+                    icon: "fa-shield-halved",
+                    color: "#1565C0"
+                },
+                {
+                    name: "Education",
+                    emoji: "📚",
+                    icon: "fa-book",
+                    color: "#5E35B1"
+                },
+                {
+                    name: "Travel",
+                    emoji: "✈️",
+                    icon: "fa-plane",
+                    color: "#00ACC1"
+                },
+                {
+                    name: "Bills",
+                    emoji: "📄",
+                    icon: "fa-file-lines",
+                    color: "#546E7A"
+                },
+                {
+                    name: "EMI",
+                    emoji: "💳",
+                    icon: "fa-credit-card",
+                    color: "#C0392B"
+                },
+                {
+                    name: "Taxes",
+                    emoji: "🏛️",
+                    icon: "fa-landmark",
+                    color: "#6D4C41"
+                },
+                {
+                    name: "Gifts",
+                    emoji: "🎁",
+                    icon: "fa-gift",
+                    color: "#EC407A"
+                },
+                {
+                    name: "Personal Care",
+                    emoji: "🧴",
+                    icon: "fa-pump-soap",
+                    color: "#FF7043"
+                },
+                {
+                    name: "Borrow",
+                    emoji: "🤝",
+                    icon: "fa-handshake",
+                    color: "#42A5F5"
+                },
+                {
+                    name: "Lend",
+                    emoji: "💸",
+                    icon: "fa-money-bill-wave",
+                    color: "#EF5350"
+                },
+                {
+                    name: "Other",
+                    emoji: "📦",
+                    icon: "fa-box",
+                    color: "#757575"
+                }
+            ],
+            transactions: [],
+        };
+
+        let pieChartInstance = null;
+        let barChartInstance = null;
+        let categoryBudgetChartInstance = null;
+        let editingTransactionId = null;
+        let searchActive = false;
+        let budgetModalInstance;
+
+        const budgetPerDayCard = document.getElementById("budget_per_day_card");
+        const remainingPerDayCard = document.getElementById("remaining_per_day_card");
+        const brandLogoAnchor = document.getElementById("brand_logo_anchor");
+        const themeToggleBtn = document.getElementById("theme_toggle_btn");
+        const themeIcon = document.getElementById("theme_icon");
+        const themeText = document.getElementById("theme_text");
+        const budgetSelect = document.getElementById("budget_select");
+        const budgetModal = document.getElementById("budget_modal");
+        const addBudgetBtn = document.getElementById("add_budget_btn");
+        const editBudgetBtn = document.getElementById("edit_budget_btn");
+        const deleteBudgetBtn = document.getElementById("delete_budget_btn");
+        const budgetFormSubmitBtn = document.getElementById("budget_form_submit_btn");
+        const budgetForm = document.getElementById("budget_form");
+        const budgetFormAmountInput = document.getElementById("budget_form_amount_input");
+        const budgetFormStartDateInput = document.getElementById("budget_form_start_date_input");
+        const budgetFormEndDateInput = document.getElementById("budget_form_end_date_input");
+        const usernameDisplaySpan = document.getElementById("username_display_span");
+        const usernameBtn = document.getElementById("username_btn");
+        const mobileBudgetSelect = document.getElementById("mobile_budget_select");
+        const transactionForm = document.getElementById("transaction_form");
+        const transactionFormCategorySelect = document.getElementById("transaction_form_category_select");
+        const transactionFormDateInput = document.getElementById("transaction_form_date_input");
+        const transactionFormNoteInput = document.getElementById("transaction_form_note_input");
+        const transactionFormAmountInput = document.getElementById("transaction_form_amount_input");
+        const usageBtn = document.getElementById("usage_btn");
+        const mobileUsageBtn = document.getElementById("mobile_usage_btn");
+        const topCategoryCard = document.getElementById("top_category_card");
+        const lowestCategoryCard = document.getElementById("lowest_category_card");
+        const topCategoryIcon = document.getElementById("top_category_icon");
+        const lowestCategoryIcon = document.getElementById("lowest_category_icon");
+        const footerYear = document.getElementById("footer_year");
+        const cancelEditBtn = document.getElementById("cancel_edit_btn");
+        const transactionFormSubmitBtn = document.getElementById("transaction_form_submit_btn");
+        const footerTagline = document.getElementById("footer_tagline");
+        const viewBudgetBtn = document.getElementById("view_budget_btn");
+        const exportJsonBtn = document.getElementById("export_json_btn");
+        const exportCsvBtn = document.getElementById("export_csv_btn");
+        const exportPdfBtn = document.getElementById("export_pdf_btn");
+        const importJsonBtn = document.getElementById("import_json_btn");
+        const importJsonInput = document.getElementById("import_json_input");
+        const compareBudgetModal = document.getElementById("compareBudgetModal");
+        const compareDownloadCsvBtn = document.getElementById("compare_download_csv_btn");
+        const compareDownloadPdfBtn = document.getElementById("compare_download_pdf_btn");
+        const compareBtn = document.getElementById("compare_btn");
+        const spendingTrendCanvas = document.getElementById("spending_trend_chart_canvas");
+        const categoryBreakdownCanvas = document.getElementById("category_breakdown_chart_canvas");
+        const categoryBudgetUsageCanvas = document.getElementById("category_budget_usage_chart_canvas");
+        const budgetDetailsContainer = document.getElementById("budget_details_container");
+        const searchRow = document.getElementById("search_row");
+        const searchInput = document.getElementById("search_input");
+        const searchClearBtn = document.getElementById("search_clear_btn");
+        const searchCount = document.getElementById("search_count");
+        const searchNavBtn = document.getElementById("search_nav_btn");
+        const transactionsAccordion = document.getElementById("transactions_accordion");
+        const compareChipContainer = document.getElementById("compare_chip_container");
+
+        document.addEventListener("DOMContentLoaded", async () => {
+
+            await IndexedDBService.init();
+
+            // Dashboard - Must run first: loads saved theme, username, budgets, and transactions
+            await initializeDashboard();
+
+            // Brand
+            brandLogoAnchor.addEventListener("click", handleBrandLogoClick);
+
+            // Handle greeting
+            await handleUserGreeting();
+            usernameBtn.addEventListener("click", async () => await handleEditUsername());
+
+            // Theme
+            initDarkMode();
+            themeToggleBtn.addEventListener("click", async () => await toggleDarkMode());
+
+            // Budget
+            budgetModalInstance = bootstrap.Modal.getOrCreateInstance(budgetModal);
+            addBudgetBtn.addEventListener("click", initializeAddBudgetModal);
+            editBudgetBtn.addEventListener("click", handleEditBudget);
+            deleteBudgetBtn.addEventListener("click", async () => await handleDeleteBudget());
+            budgetFormStartDateInput.addEventListener("change", handleStartDateChange);
+            budgetForm.addEventListener("submit", async (e) => await handleBudgetFormSubmit(e));
+            budgetSelect.addEventListener("change", handleBudgetChange);
+            mobileBudgetSelect.addEventListener("change", handleBudgetChange);
+            viewBudgetBtn.addEventListener("click", initializeBudgetDetailsModal);
+            budgetFormAmountInput.addEventListener("input", () => {
+
+            });
+            budgetFormStartDateInput.addEventListener("change", validateBudgetDate);
+            budgetFormEndDateInput.addEventListener("change", validateBudgetDate);
+            budgetSelect.addEventListener("change", () => { initializeTransactionForm(); });
+            mobileBudgetSelect.addEventListener("change", e => {
+                budgetSelect.value = e.target.value;
+                initializeTransactionForm();
+                handleBudgetChange(e);
+            });
+
+            // Transaction
+            initializeTransactionForm();
+            transactionFormCategorySelect.addEventListener("change", handleCategoryChange);
+            transactionForm.addEventListener("submit", async (e) => await handleTransactionFormSubmit(e));
+            cancelEditBtn.addEventListener("click", cancelTransactionEdit);
+
+            //Import
+            exportJsonBtn.addEventListener("click", exportDataAsJson);
+            exportCsvBtn.addEventListener("click", exportDataAsCsv);
+            exportPdfBtn.addEventListener("click", exportDataAsPdf);
+            importJsonInput.addEventListener("change", async () => await importJsonFile());
+            importJsonBtn.addEventListener("click", () => { importJsonInput.click(); });
+
+            // Compare
+            compareBudgetModal.addEventListener("show.bs.modal", initializeCompareBudgetModal);
+            compareDownloadCsvBtn.addEventListener("click", downloadCompareCsv);
+
+            updateDashboard();
+            renderTransactionsAccordion();
+            footerYear.textContent = new Date().getFullYear();
+            footerTagline.innerHTML = getRandomFooterTagline();
+
+            // Search
+            searchNavBtn.addEventListener("click", handleSearchToggle);
+            searchInput.addEventListener("keydown", handleSearchKeyDown);
+            searchInput.addEventListener("input", handleSearchInput);
+            searchClearBtn.addEventListener("click", handleSearchClear);
+
+        }); // DOMContentLoaded - End
+
+        function handleBrandLogoClick(e) {
+            e.preventDefault();
+            location.reload();
+        }
+
+        async function handleEditUsername() {
+
+            const updatedName = prompt("Edit your name:", data.username || "user");
+
+            if (!updatedName?.trim()) return;
+            if (!isValidName(updatedName)) {
+                Toast.warning("Enter a valid name (letters and spaces only, 3-30 characters)");
+                return;
+            }
+            data.username = updatedName.trim().toLowerCase();
+            await saveData();
+            usernameDisplaySpan.textContent = data.username;
+        }
+
+        function initDarkMode() {
+            applyTheme(data.theme);
+        }
+
+        function initializeDashboardCards() {
+
+            [
+                "budget_card",
+                "spent_card",
+                "remaining_card",
+                "youll_get_card",
+                "youll_pay_card",
+                "today_spending_card"
+            ].forEach(id => {
+                document.getElementById(id).textContent = "₹0";
+            });
+
+            [
+                "days_left_card",
+                "transaction_count_card"
+            ].forEach(id => {
+                document.getElementById(id).textContent = "0";
+            });
+
+            budgetPerDayCard.textContent = "₹0/day";
+            remainingPerDayCard.textContent = "₹0/day left";
+            topCategoryIcon.className = "fa-solid fa-arrow-up";
+            lowestCategoryIcon.className = "fa-solid fa-arrow-down";
+            topCategoryCard.innerHTML = '<small class="text-muted fs-6">No Data</small>';
+            lowestCategoryCard.innerHTML = '<small class="text-muted fs-6">No Data</small>';
+            usageBtn.textContent = "😴 No Budget";
+            mobileUsageBtn.textContent = "😴 No Budget";
+        }
+
+        async function handleUserGreeting() {
+            let username = data.username;
+            while (!username) {
+                const input = prompt("Enter your name:");
+
+                if (input && isValidName(input)) {
+                    username = input.trim();
+                } else {
+                    Toast.warning("Please enter a valid name");
+                }
+            }
+
+            data.username = username;
+            await saveData();
+            usernameDisplaySpan.textContent = username;
+        }
+
+        async function applyTheme(theme) {
+            document.documentElement.dataset.bsTheme = theme;
+            const isDark = theme === "dark";
+            themeToggleBtn.classList.remove("btn-outline-dark", "btn-outline-light");
+            themeToggleBtn.classList.add(isDark ? "btn-outline-light" : "btn-outline-dark");
+            themeIcon.classList.remove("fa-moon", "fa-sun");
+            themeIcon.classList.add(isDark ? "fa-sun" : "fa-moon");
+            themeText.textContent = isDark ? "Light" : "Dark";
+            data.theme = theme;
+            await saveData();
+        }
+
+        async function toggleDarkMode() {
+            await applyTheme(document.documentElement.dataset.bsTheme === "dark" ? "light" : "dark");
+        }
+
+        function initializeAddBudgetModal() {
+            budgetForm.reset();
+            budgetForm.dataset.method = "POST";
+            delete budgetForm.dataset.editId;
+            budgetFormSubmitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>&nbsp;Create Budget';
+            budgetModalInstance.show();
+        }
+
+        async function handleBudgetFormSubmit(e) {
+
+            e.preventDefault();
+
+            const amount = budgetFormAmountInput.value.trim();
+            const startDate = budgetFormStartDateInput.value;
+            const endDate = budgetFormEndDateInput.value;
+            const isEdit = budgetForm.dataset.method === "PUT";
+            const editId = budgetForm.dataset.editId;
+
+            const errors = [
+                !amount && "Amount is required",
+                amount && Number(amount) <= 0 && "Amount must be greater than 0",
+                amount && Number(amount) > MAX_BUDGET_AMOUNT && "Maximum budget allowed is ₹1,00,00,000 (1 Crore)",
+                !startDate && "Start date is required",
+                !endDate && "End date is required",
+                startDate && endDate && endDate < startDate && "End date must be greater than start date",
+                startDate && endDate &&
+                data.budget.some(budget => {
+                    if (isEdit && budget.id === editId) return false;
+                    const existingStartDate = new Date(budget.startDate);
+                    const existingEndDate = new Date(budget.endDate);
+                    return (new Date(startDate) <= existingEndDate && new Date(endDate) >= existingStartDate);
+                }) && "Budget already exists for selected date range"
+            ].filter(Boolean);
+
+            if (errors.length) {
+                // alert("⚠️ Please fix the following:\n• " + errors.join("\n• "));
+                errors.forEach(error => Toast.warning(error));
+                return;
+            }
+
+            const name = `${new Date(startDate).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "2-digit"
+            })} - ${new Date(endDate).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "2-digit"
+            })}`;
+
+            if (isEdit) {
+
+                const budget = data.budget.find(budget => budget.id === editId);
+                budget.amount = Number(amount);
+                budget.startDate = startDate;
+                budget.endDate = endDate;
+                budget.name = name;
+                await saveData();
+                Toast.success("Budget updated successfully");
+                renderBudgetOptions();
+                budgetSelect.value = budget.id;
+                mobileBudgetSelect.value = budget.id;
+                updateDashboard();
+                renderTransactionsAccordion();
+                initializeTransactionForm();
+                budgetModalInstance.hide();
+
+                return;
+            }
+
+            const budgetData = {
+                id: generateBudgetId(startDate, endDate),
+                amount: Number(amount),
+                startDate,
+                endDate,
+                name,
+                createdAt: new Date().toISOString(),
+            };
+
+            console.log("Budget Saved:", budgetData);
+            data.budget.push(budgetData);
+            await saveData();
+            Toast.success("Budget created successfully");
+            renderBudgetOptions();
+            budgetSelect.value = budgetData.id;
+            mobileBudgetSelect.value = budgetData.id;
+            renderTransactionsAccordion();
+            initializeTransactionForm();
+            updateDashboard();
+            budgetModalInstance.hide();
+        }
+
+        function cancelTransactionEdit() {
+            editingTransactionId = null;
+            initializeTransactionForm();
+            transactionFormSubmitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>&nbsp;Add Transaction';
+            cancelEditBtn.classList.add("d-none");
+        }
+
+        function validateBudgetDate() {
+
+            const startDate = budgetFormStartDateInput.value;
+            const endDate = budgetFormEndDateInput.value;
+
+            if (!startDate || !endDate) return;
+
+            const overlappingBudget = data.budget.find(
+                budget => new Date(startDate) <= new Date(budget.endDate) &&
+                    new Date(endDate) >= new Date(budget.startDate)
+            );
+
+            if (overlappingBudget) {
+                Toast.warning(
+                    `Budget already exists for: ${formatDate(overlappingBudget.startDate)} → ${formatDate(overlappingBudget.endDate)}`
+                );
+
+                budgetFormStartDateInput.value = "";
+                budgetFormEndDateInput.value = "";
+            }
+        }
+
+        function exportDataAsJson() {
+            const activeBudget = getActiveBudget();
+
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob(
+                [jsonString],
+                { type: "application/json" }
+            );
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+
+            a.download = activeBudget ? `TMS-${formatDate(activeBudget.startDate)}-to-${formatDate(activeBudget.endDate)}.json` : "TMS-backup.json";
+
+            document.body.appendChild(a);
+            a.click();
+            Toast.success("JSON exported successfully");
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportDataAsCsv() {
+            const budgetId = getSelectedBudgetId();
+            const activeBudget = getActiveBudget();
+
+            if (!activeBudget) {
+                Toast.warning("No budget selected");
+                return;
+            }
+
+            const transactions = data.transactions.filter(transaction => transaction.budgetId === budgetId);
+            if (!transactions.length) {
+                Toast.warning("No transactions found");
+                return;
+            }
+
+            const escape = value => {
+                if (value == null) return "";
+                const str = String(value);
+                return /[",\n]/.test(str) ? `"${str.replaceAll('"', '""')}"` : str;
+            };
+
+            let spent = 0;
+            let youWillGet = 0;
+            let youWillPay = 0;
+
+            const expenseTransactions = [];
+            const categoryTotals = {};
+
+            for (const transaction of transactions) {
+                if (transaction.category === SPECIAL_CATEGORIES.LEND) {
+                    youWillGet += transaction.amount;
+                    continue;
+                }
+                if (transaction.category === SPECIAL_CATEGORIES.BORROW) {
+                    youWillPay += transaction.amount;
+                    continue;
+                }
+                spent += transaction.amount;
+                expenseTransactions.push(transaction);
+                categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
+            }
+
+            const headers = [
+                "SL No.",
+                "Date",
+                "Category",
+                "Amount",
+                "Note"
+            ];
+
+            const rows = transactions
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map((transaction, index) => {
+                    const category = data.categories.find(
+                        c => c.name === transaction.category
+                    );
+                    return [
+                        index + 1,
+                        escape(transaction.date),
+                        escape(`${category?.emoji || "📦"} ${transaction.category}`),
+                        escape(transaction.amount),
+                        escape(transaction.note)
+                    ];
+                });
+
+            const remaining = activeBudget.amount - spent;
+            const transactionCount = transactions.length;
+            const highestTransaction = expenseTransactions.length ? expenseTransactions.reduce((max, t) => t.amount > max.amount ? t : max, expenseTransactions[0]) : null;
+            const lowestTransaction = expenseTransactions.length ? expenseTransactions.reduce((min, t) => t.amount < min.amount ? t : min, expenseTransactions[0]) : null;
+            const highestCategoryInfo = highestTransaction ? data.categories.find(c => c.name === highestTransaction.category) : null;
+            const lowestCategoryInfo = lowestTransaction ? data.categories.find(c => c.name === lowestTransaction.category) : null;
+            const budgetUsage = activeBudget.amount > 0 ? Math.round((spent / activeBudget.amount) * 100) : 0;
+            const daysLeft = Math.max(0, Math.ceil((new Date(activeBudget.endDate) - Date.now()) / (1000 * 60 * 60 * 24)));
+            const categoryBreakdownRows = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1])
+                .map(([categoryName, amount]) => {
+                    const category = data.categories.find(c => c.name === categoryName);
+                    const percentage = spent > 0 ? Math.round((amount / spent) * 100) : 0;
+                    return [`${category?.emoji || "📦"} ${categoryName}`, `₹${amount}`, `${percentage}%`
+                    ];
+                });
+
+            const metadata = [
+                ["💰 Track My Spend Report"],
+                [],
+                ["👤 Name", escape(data.username || "User")],
+                ["📅 Report generated on", `"${new Date().toLocaleString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true
+                })}"`],
+                [],
+                ["💼 Budget Details"],
+                ["📋 Budget", activeBudget.name],
+                ["💰 Budget Amount", `₹${activeBudget.amount}`],
+                ["📉 Spent", `₹${spent}`],
+                ["💵 Remaining", `₹${remaining}`],
+                ["📈 Budget Usage", `${budgetUsage}%`],
+                ["⏳ Days Left", `${daysLeft} day(s)`],
+                ["🧾 Total Transactions", transactionCount],
+                ["🔥 Highest Expense", highestTransaction ? `${highestCategoryInfo?.emoji || "📦"} ${highestTransaction.category} (₹${highestTransaction.amount})` : "N/A"],
+                ["🌱 Lowest Expense", lowestTransaction ? `${lowestCategoryInfo?.emoji || "📦"} ${lowestTransaction.category} (₹${lowestTransaction.amount})` : "N/A"],
+                ["💸 You'll Get", `₹${youWillGet}`],
+                ["🤝 You'll Pay", `₹${youWillPay}`],
+                [],
+                ["📑 Transaction Details"]
+            ];
+
+            const categoryBreakdownSection = [
+                [],
+                ["📊 Category-wise Breakdown"],
+                ["Category", "Amount", "Percentage"],
+                ...categoryBreakdownRows
+            ];
+
+            const footerRows = [
+                [],
+                [`❤️ Built by AKN • © ${new Date().getFullYear()} 💰 Track My Spend`]
+            ];
+
+            const csv = [
+                ...metadata.map(row => row.join(",")),
+                headers.join(","),
+                ...rows.map(row => row.join(",")),
+                ...categoryBreakdownSection.map(row => row.join(",")),
+                ...footerRows.map(row => row.join(","))
+            ].join("\n");
+
+            const blob = new Blob(
+                ["\uFEFF" + csv],
+                { type: "text/csv;charset=utf-8;" }
+            );
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `TMS-${formatDate(activeBudget.startDate)}-to-${formatDate(activeBudget.endDate)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            Toast.success("CSV exported successfully");
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportDataAsPdf() { }
+
+        async function importJsonFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const importedData = JSON.parse(text);
+                if (
+                    !Array.isArray(importedData.budget) ||
+                    !Array.isArray(importedData.transactions) ||
+                    !Array.isArray(importedData.categories)
+                ) {
+                    throw new TypeError("Invalid backup file: budget, transactions, and categories must be arrays");
+                }
+                const confirmed = confirm("⚠️ Importing will overwrite current data. Continue?");
+                if (!confirmed) return;
+                data = importedData;
+                await saveData();
+                await initializeDashboard();
+                Toast.success("Data imported successfully");
+            } catch (error) {
+                console.error(error);
+                Toast.danger(error.message);
+            } finally {
+                e.target.value = "";
+            }
+        }
+
+        function updateDashboard(trigger = "all") {
+            const budgetId = getSelectedBudgetId();
+            const budget = getActiveBudget();
+
+            if (!budget) {
+                initializeDashboardCards();
+                renderCharts();
+                return;
+            }
+
+            const today = new Date();
+            const todayString = today.toISOString().split("T")[0];
+            const transactions = data.transactions.filter(t => t.budgetId === budgetId);
+
+            let spent = 0;
+            let todaySpending = 0;
+            let youWillGet = 0;
+            let youWillPay = 0;
+
+            const categoryTotals = {};
+            for (const t of transactions) {
+                if (t.category === SPECIAL_CATEGORIES.LEND) {
+                    youWillGet += t.amount;
+                    continue;
+                }
+                if (t.category === SPECIAL_CATEGORIES.BORROW) {
+                    youWillPay += t.amount;
+                    continue;
+                }
+                spent += t.amount;
+                if (t.date === todayString) {
+                    todaySpending += t.amount;
+                }
+                categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+            }
+
+            const remaining = budget.amount - spent;
+            const totalDays = Math.ceil((new Date(budget.endDate) - new Date(budget.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+            const budgetPerDay = totalDays > 0 ? budget.amount / totalDays : 0;
+            const daysLeft = Math.max(0, Math.ceil((new Date(budget.endDate) - today) / (1000 * 60 * 60 * 24)));
+            const remainingPerDay = daysLeft > 0 ? remaining / daysLeft : remaining;
+            const percent = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+
+            let emoji = "😎";
+            if (percent >= 80) {
+                emoji = "💀";
+            } else if (percent >= 50) {
+                emoji = "😟";
+            }
+
+            const usageText = `${emoji} ${Math.round(percent)}% Used`;
+
+            usageBtn.textContent = usageText;
+            mobileUsageBtn.textContent = usageText;
+
+            const usageClass = percent < 50 ? "btn-outline-success" : percent < 80 ? "btn-outline-warning" : "btn-outline-danger";
+
+            const usageClasses = [
+                "btn-outline-success",
+                "btn-outline-warning",
+                "btn-outline-danger"
+            ];
+
+            [usageBtn, mobileUsageBtn].forEach(btn => {
+                btn.classList.remove(...usageClasses);
+                btn.classList.add(usageClass);
+            });
+
+            budgetPerDayCard.textContent = `₹${Math.round(budgetPerDay).toLocaleString()}/day`;
+            remainingPerDayCard.textContent = `₹${Math.round(remainingPerDay).toLocaleString()}/day left`;
+
+            const transactionCount = transactions.length;
+            const categories = Object.entries(categoryTotals);
+            const topCategory = categories.length ? categories.reduce((max, current) => current[1] > max[1] ? current : max) : null;
+            const lowestCategory = categories.length ? categories.reduce((min, current) => current[1] < min[1] ? current : min) : null;
+
+            if (topCategory) {
+                const category = data.categories.find(c => c.name === topCategory[0]);
+
+                topCategoryIcon.className = `fa-solid ${category.icon}`;
+                topCategoryCard.innerHTML = `${category.name} <small class="text-danger fw-semibold">
+                                                ₹${topCategory[1].toLocaleString()}
+                                            </small>`;
+            } else {
+                topCategoryIcon.className = "fa-solid fa-arrow-up";
+                topCategoryCard.innerHTML = '<small class="text-muted fs-6">No spending yet</small>';
+            }
+
+            if (lowestCategory) {
+                const category = data.categories.find(c => c.name === lowestCategory[0]);
+
+                lowestCategoryIcon.className = `fa-solid ${category.icon}`;
+                lowestCategoryCard.innerHTML = `${category.name}
+                                        <small class="text-success fw-semibold">
+                                            ₹${lowestCategory[1].toLocaleString()}
+                                        </small>`;
+            } else {
+                lowestCategoryIcon.className = "fa-solid fa-arrow-down";
+                lowestCategoryCard.innerHTML = '<small class="text-muted fs-6">No spending yet</small>';
+            }
+
+            switch (trigger) {
+                case "budget":
+                    animateCountUpValue("budget_card", budget.amount);
+                    animateCountUpValue("remaining_card", remaining);
+                    animateCountUpValue("days_left_card", daysLeft, false);
+                    break;
+
+                case "expense":
+                    animateCountUpValue("spent_card", spent);
+                    animateCountUpValue("remaining_card", remaining);
+                    animateCountUpValue("transaction_count_card", transactionCount, false);
+                    animateCountUpValue("today_spending_card", todaySpending);
+                    break;
+
+                case "borrow":
+                    animateCountUpValue("youll_pay_card", youWillPay);
+                    animateCountUpValue("transaction_count_card", transactionCount, false);
+                    break;
+
+                case "lend":
+                    animateCountUpValue("youll_get_card", youWillGet);
+                    animateCountUpValue("transaction_count_card", transactionCount, false);
+                    break;
+
+                default:
+                    animateCountUpValue("budget_card", budget.amount);
+                    animateCountUpValue("spent_card", spent);
+                    animateCountUpValue("remaining_card", remaining);
+                    animateCountUpValue("days_left_card", daysLeft, false);
+                    animateCountUpValue("youll_get_card", youWillGet);
+                    animateCountUpValue("youll_pay_card", youWillPay);
+                    animateCountUpValue("transaction_count_card", transactionCount, false);
+                    animateCountUpValue("today_spending_card", todaySpending);
+            }
+
+            renderCharts();
+        }
+
+        function animateCountUpValue(id, value, isCurrency = true) {
+            const options = {
+                duration: 1,
+                separator: ",",
+                decimalPlaces: 0,
+                prefix: isCurrency ? "₹" : ""
+            };
+            new countUp.CountUp(id, value, options).start();
+        }
+
+        function renderTransactionsAccordion() {
+            const transactions = data.transactions.filter(t => t.budgetId === getSelectedBudgetId());
+
+            if (!transactions.length) {
+                transactionsAccordion.innerHTML = `<div class="card shadow-sm rounded-4 border-secondary">
+                        <div class="card-body text-center py-5">
+                            <i class="fa-solid fa-receipt fa-3x text-secondary mb-3"></i>
+                            <h6 class="text-muted mb-1">No Transactions Yet</h6>
+                            <small class="text-muted">
+                                Add your first transaction to start tracking expenses.
+                            </small>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            const groupedTransactions = transactions.reduce((acc, transaction) => {
+                if (!acc[transaction.date]) {
+                    acc[transaction.date] = [];
+                }
+                acc[transaction.date].push(transaction);
+                return acc;
+            }, {});
+
+            transactionsAccordion.innerHTML = Object.entries(groupedTransactions)
+                .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                .map(([date, items], index) => {
+                    const total = items.reduce((sum, item) => sum + item.amount, 0
+                    );
+                    return `<div class="accordion-item rounded-4 mb-2">
+                            <h2 class="accordion-header">
+                                <button
+                                    class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#day_${date.replaceAll("-", "")}">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-1">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-calendar-days text-primary fa-2x me-1"></i>
+                                            <div>
+                                                <div class="fw-bold">
+                                                    ${new Date(date).toLocaleDateString(
+                        "en-GB",
+                        {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric"
+                        }
+                    )}
+                                            </div>
+                                            <small class="text-muted">
+                                                ${items.length} Transactions
+                                            </small>
+                                            </div>
+                                        </div>
+                                        <span class="badge text-bg-danger">
+                                            ₹${total.toLocaleString()}
+                                        </span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="day_${date.replaceAll("-", "")}"
+                                class="accordion-collapse collapse"
+                                data-bs-parent="#transactions_accordion">
+                                <div class="accordion-body p-3 pb-2">
+                                    <div class="list-group list-group-flush">
+                                        ${[...items].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                            .map(renderTransactionItem)
+                            .join("")}
+                                    </div>
+                                    <div class="d-flex justify-content-end mt-1">
+                                        <button
+                                            class="btn btn-sm btn-outline-danger rounded-pill"
+                                            onclick="deleteTransactionsByDate('${date}')">
+
+                                            <i class="fa-solid fa-trash"></i>
+                                            Delete all (${items.length})
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join("");
+        }
+
+        function renderTransactionItem(transaction) {
+            const category = data.categories.find(c => c.name === transaction.category);
+            const hasNote = transaction.note?.trim();
+
+            if (!hasNote) {
+                return `<div class="list-group-item border-0 rounded-4 mb-2 bg-body-tertiary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid ${category?.icon || "fa-box"} fa-lg me-2" style="color:${category?.color || "#6c757d"}"></i>
+                                    <div class="fw-semibold">
+                                        ${transaction.category}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-danger">
+                                        -₹${transaction.amount.toLocaleString()}
+                                    </div>
+                                    <div class="mt-1 d-flex gap-2 justify-content-end">
+                                        <i class="fa-solid fa-pen-to-square text-primary cursor-pointer"
+                                        onclick="editTransaction('${transaction.id}')"></i>
+
+                                        <i class="fa-solid fa-trash text-danger cursor-pointer"
+                                        onclick="deleteTransaction('${transaction.id}')"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+            }
+
+            return `<div class="list-group-item border-0 rounded-4 mb-2 bg-body-tertiary">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">
+                                    <i class="fa-solid ${category?.icon || "fa-box"} me-1" style="color:${category?.color || "#6c757d"}"></i>
+                                    ${transaction.category}
+                                </div>
+                                <div class="small text-muted">
+                                    ${transaction.note}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-danger">
+                                    -₹${transaction.amount.toLocaleString()}
+                                </div>
+                                <div class="mt-1 d-flex gap-2 justify-content-end">
+                                    <i class="fa-solid fa-pen-to-square text-primary cursor-pointer"></i>
+                                    <i class="fa-solid fa-trash text-danger cursor-pointer"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+        }
+
+        function handleEditBudget() {
+            const activeBudget = getActiveBudget();
+
+            if (!activeBudget) {
+                Toast.warning("No active budget selected");
+                return;
+            }
+
+            budgetFormAmountInput.value = activeBudget.amount;
+            budgetFormStartDateInput.value = activeBudget.startDate;
+            budgetFormEndDateInput.value = activeBudget.endDate;
+            budgetForm.dataset.method = "PUT";
+            budgetForm.dataset.editId = activeBudget.id;
+            budgetFormSubmitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Budget';
+            budgetModalInstance.show();
+        }
+
+        async function handleDeleteBudget() {
+
+            const budgetId = getSelectedBudgetId();
+            if (!budgetId) {
+                Toast.warning("No active budget selected");
+                return;
+            }
+
+            const activeBudget = getActiveBudget();
+            if (!activeBudget) {
+                Toast.warning("Budget not found");
+                return;
+            }
+
+            const confirmed = confirm(`Delete budget "${activeBudget.name}"?\nAll transactions under this budget will also be deleted.`);
+            if (!confirmed) return;
+
+            data.transactions = data.transactions.filter(transaction => transaction.budgetId !== budgetId);
+            data.budget = data.budget.filter(budget => budget.id !== budgetId);
+
+            await saveData();
+            initializeTransactionForm();
+
+            if (data.budget.length) {
+                budgetSelect.value = data.budget[0].id;
+                mobileBudgetSelect.value = data.budget[0].id;
+            }
+
+            Toast.success("Budget deleted successfully");
+            await initializeDashboard();
+        }
+
+        function handleStartDateChange() {
+            const fromDateValue = budgetFormStartDateInput.value;
+            if (!fromDateValue) return;
+            const fromDate = new Date(fromDateValue);
+            fromDate.setDate(fromDate.getDate() + 30);
+            const toDate = fromDate.toISOString().split("T")[0];
+            budgetFormEndDateInput.value = toDate;
+            budgetFormEndDateInput.min = fromDateValue;
+        }
+
+        function editTransaction(transactionId) {
+
+            const transaction = data.transactions.find(
+                t => t.id === transactionId
+            );
+
+            if (!transaction) return;
+            editingTransactionId = transactionId;
+            transactionFormAmountInput.value = transaction.amount;
+            transactionFormCategorySelect.value = transaction.category;
+            transactionFormDateInput.value = transaction.date;
+            transactionFormNoteInput.value = transaction.note || "";
+            transactionFormSubmitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>&nbsp;Update';
+            cancelEditBtn.classList.remove("d-none");
+            transactionForm.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+
+        function initializeTransactionForm() {
+
+            transactionForm.reset();
+
+            transactionFormCategorySelect.innerHTML = '<option value="" disabled selected hidden>📂 Select Category</option>';
+            transactionFormCategorySelect.innerHTML += [...data.categories]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(category => `<option value="${category.name}">${category.emoji} ${category.name}</option>`)
+                .join("");
+
+            const today = new Date().toISOString().split("T")[0];
+
+            const activeBudget = data.budget?.find(
+                budget => budget.id === budgetSelect.value
+            );
+
+            if (activeBudget) {
+                transactionFormDateInput.min = activeBudget.startDate;
+                transactionFormDateInput.max = activeBudget.endDate;
+                transactionFormDateInput.value = (today >= activeBudget.startDate && today <= activeBudget.endDate) ? today : activeBudget.startDate;
+            } else {
+                transactionFormDateInput.min = "";
+                transactionFormDateInput.max = "";
+                transactionFormDateInput.value = today;
+            }
+
+            transactionFormCategorySelect.selectedIndex = 0;
+        }
+
+        async function initializeDashboard() {
+            const savedData = await loadData();
+            if (savedData) data = savedData;
+            renderBudgetOptions();
+
+            if (!data.budget?.length) {
+                initializeDashboardCards();
+                renderCharts();
+                return;
+            }
+
+            updateDashboard();
+            renderTransactionsAccordion();
+        }
+
+        function renderBudgetOptions() {
+
+            budgetSelect.length = 0;
+            mobileBudgetSelect.length = 0;
+
+            if (!data.budget || data.budget.length === 0) {
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "🔴 No Budget Active";
+                budgetSelect.appendChild(option);
+                mobileBudgetSelect.appendChild(option.cloneNode(true));
+                return;
+            }
+
+            const budgets = [...data.budget].sort((a, b) =>
+                new Date(b.createdAt) - new Date(a.createdAt)
+            );
+
+            budgetSelect.innerHTML = budgets
+                .map((budget, index) => `<option value="${budget.id}">
+                        ${index === 0 ? "🟢" : ""} ${budget.name}
+                    </option>`)
+                .join("");
+            mobileBudgetSelect.innerHTML = budgetSelect.innerHTML;
+            budgetSelect.value = budgets[0].id;
+            mobileBudgetSelect.value = budgets[0].id;
+        }
+
+        async function handleTransactionFormSubmit(e) {
+
+            e.preventDefault();
+
+            const amount = transactionFormAmountInput.value.trim();
+            const category = transactionFormCategorySelect.value;
+            const date = transactionFormDateInput.value;
+            const note = transactionFormNoteInput.value.trim();
+            const budgetId = getSelectedBudgetId();
+
+            const errors = [
+                !budgetId && "Budget is required",
+                !amount && "Amount is required",
+                amount && Number(amount) <= 0 && "Amount must be greater than 0",
+                !category && "Category is required",
+                !date && "Date is required",
+                note.length > 60 && "Note must not exceed 60 characters"
+            ].filter(Boolean);
+
+            if (errors.length) {
+                // alert("⚠️ Please fix the following:\n• " + errors.join("\n• "));
+                errors.forEach(error => Toast.warning(error));
+                return;
+            }
+
+            if (editingTransactionId) {
+                const transaction = data.transactions.find(t => t.id === editingTransactionId);
+
+                if (!transaction) return;
+
+                transaction.amount = Number(amount);
+                transaction.category = category;
+                transaction.date = date;
+                transaction.note = note;
+                await saveData();
+                Toast.success("Transaction updated successfully");
+                editingTransactionId = null;
+                transactionFormSubmitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>&nbsp;Add Transaction';
+                cancelEditBtn.classList.add("d-none");
+
+            } else {
+
+                const transaction = {
+                    id: crypto.randomUUID(),
+                    budgetId,
+                    amount: Number(amount),
+                    category,
+                    date,
+                    note,
+                    createdAt: new Date().toISOString()
+                };
+
+                data.transactions.unshift(transaction);
+                await saveData();
+                Toast.success("Transaction added successfully");
+            }
+
+            updateDashboard(category === SPECIAL_CATEGORIES.LEND ? "lend" : category === SPECIAL_CATEGORIES.BORROW ? "borrow" : "expense");
+
+            renderTransactionsAccordion();
+            initializeTransactionForm();
+        }
+
+        function handleCategoryChange(e) {
+            transactionFormNoteInput.value = {
+                [SPECIAL_CATEGORIES.LEND]: "Given to ",
+                [SPECIAL_CATEGORIES.BORROW]: "Borrowed from "
+            }[e.target.value] || "";
+        }
+
+        async function deleteTransactionsByDate(date) {
+
+            const budgetId = getSelectedBudgetId();
+            const dayTransactions = data.transactions.filter(
+                transaction => transaction.budgetId === budgetId && transaction.date === date
+            );
+
+            if (!confirm(`Delete ${dayTransactions.length} transactions for ${formatDate(date)} ?`)) return;
+            data.transactions = data.transactions.filter(transaction => !(transaction.budgetId === budgetId && transaction.date === date));
+
+            await saveData();
+            Toast.success(`${dayTransactions.length} transactions deleted`);
+            updateDashboard();
+            renderTransactionsAccordion();
+        }
+
+        async function deleteTransaction(transactionId) {
+            if (!confirm("Delete this transaction?")) return;
+            data.transactions = data.transactions.filter(transaction => transaction.id !== transactionId);
+            await saveData();
+            Toast.success("Transaction deleted successfully");
+            updateDashboard();
+            renderTransactionsAccordion();
+        }
+
+        function clearChartEmptyStates(...containers) {
+            containers.forEach(container => {
+                container.querySelector(".trend-empty-state")?.remove();
+                container.querySelector(".pie-empty-state")?.remove();
+                container.querySelector(".budget-usage-empty-state")?.remove();
+            });
+        }
+
+        function destroyCharts() {
+            barChartInstance?.destroy();
+            pieChartInstance?.destroy();
+            categoryBudgetChartInstance?.destroy();
+            barChartInstance = null;
+            pieChartInstance = null;
+            categoryBudgetChartInstance = null;
+        }
+
+        function toggleCharts(display, ...canvases) {
+            canvases.forEach(canvas => {
+                canvas.style.display = display;
+            });
+        }
+
+        function renderEmptyState(container, className, icon, title, message) {
+            container.insertAdjacentHTML("beforeend", `<div class="${className} d-flex justify-content-center align-items-center h-100 text-muted">
+                    <div class="text-center">
+                        <i class="${icon} fa-3x mb-3"></i>
+                        <h6>${title}</h6>
+                        <small>${message}</small>
+                    </div>
+                </div>`
+            );
+        }
+
+        function renderCharts() {
+
+            const budgetId = getSelectedBudgetId();
+            const budget = getActiveBudget();
+            const trendContainer = spendingTrendCanvas.parentElement;
+            const pieContainer = categoryBreakdownCanvas.parentElement;
+            const budgetUsageContainer = categoryBudgetUsageCanvas.parentElement;
+
+            clearChartEmptyStates(
+                trendContainer,
+                pieContainer,
+                budgetUsageContainer
+            );
+
+            destroyCharts();
+
+            if (!budgetId) {
+                toggleCharts("none", spendingTrendCanvas, categoryBreakdownCanvas, categoryBudgetUsageCanvas);
+                renderEmptyState(trendContainer, "trend-empty-state", "fa-solid fa-wallet", "No Budget Active", "Create a budget to view analytics.");
+                renderEmptyState(pieContainer, "pie-empty-state", "fa-solid fa-wallet", "No Budget Active", "Create a budget to view analytics.");
+                renderEmptyState(budgetUsageContainer, "budget-usage-empty-state", "fa-solid fa-wallet", "No Budget Active", "Create a budget to view analytics.");
+                return;
+            }
+
+            const transactions = data.transactions.filter(transaction =>
+                transaction.budgetId === budgetId &&
+                transaction.category !== SPECIAL_CATEGORIES.BORROW &&
+                transaction.category !== SPECIAL_CATEGORIES.LEND
+            );
+
+            if (!transactions.length) {
+                toggleCharts("none", spendingTrendCanvas, categoryBreakdownCanvas, categoryBudgetUsageCanvas);
+                renderEmptyState(trendContainer, "trend-empty-state", "fa-solid fa-chart-line", "No Spending Data", "Add transactions to see spending trends.");
+                renderEmptyState(pieContainer, "pie-empty-state", "fa-solid fa-chart-pie", "No Category Data", "Add transactions to see category distribution.");
+                renderEmptyState(budgetUsageContainer, "budget-usage-empty-state", "fa-solid fa-chart-bar", "No Budget Usage Data", "Add transactions to see budget usage.");
+                return;
+            }
+
+            toggleCharts("block", spendingTrendCanvas, categoryBreakdownCanvas, categoryBudgetUsageCanvas);
+
+            const dailyTotals = {};
+
+            transactions.forEach(transaction => {
+                dailyTotals[transaction.date] = (dailyTotals[transaction.date] || 0) + transaction.amount;
+            });
+
+            const trendLabels = Object.keys(dailyTotals).sort((a, b) => new Date(a) - new Date(b));
+            const trendData = trendLabels.map(date => dailyTotals[date]);
+
+            barChartInstance = new Chart(spendingTrendCanvas, {
+                type: "line",
+                data: {
+                    labels: trendLabels.map(date =>
+                        new Date(date).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short"
+                        })
+                    ),
+                    datasets: [{
+                        label: "Spent (₹)",
+                        data: trendData,
+                        tension: 0.5,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            const categoryTotals = {};
+
+            transactions.forEach(transaction => {
+                categoryTotals[transaction.category] =
+                    (categoryTotals[transaction.category] || 0) +
+                    transaction.amount;
+            });
+
+            const sortedCategories = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1])
+                .map(([category, amount]) => {
+
+                    const categoryInfo = data.categories.find(c => c.name === category);
+
+                    return {
+                        label: `${categoryInfo?.emoji || "📦"} ${category}`,
+                        amount,
+                        percentage: Math.round(
+                            (amount / budget.amount) * 100
+                        ),
+                        color: categoryInfo?.color || "#6c757d"
+                    };
+                });
+
+            const categoryLabels = Object.keys(categoryTotals);
+            const categoryValues = categoryLabels.map(category => categoryTotals[category]);
+            const displayLabels = categoryLabels.map(category => {
+                const categoryInfo = data.categories.find(c => c.name === category);
+                return `${categoryInfo?.emoji || "📦"} ${category}`;
+            });
+
+            const categoryColors = categoryLabels.map(category => {
+                const categoryInfo = data.categories.find(c => c.name === category);
+                return categoryInfo?.color || "#6c757d";
+            });
+
+            pieChartInstance = new Chart(categoryBreakdownCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: displayLabels,
+                    datasets: [{
+                        data: categoryValues,
+                        backgroundColor: categoryColors,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "50%"
+                }
+            });
+
+            categoryBudgetChartInstance = new Chart(categoryBudgetUsageCanvas,
+                {
+                    type: "bar",
+                    data: {
+                        labels: sortedCategories.map(c => c.label),
+                        datasets: [{
+                            data: sortedCategories.map(c => c.percentage),
+                            backgroundColor: sortedCategories.map(c => c.color)
+                        }]
+                    },
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label(context) {
+                                        const item =
+                                            sortedCategories[context.dataIndex];
+                                        return [
+                                            `Amount: ₹${item.amount.toLocaleString()}`,
+                                            `Budget Used: ${item.percentage}%`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: value => `${value}%`
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+
+        function initializeCompareBudgetModal() {
+            const activeBudgetId = getSelectedBudgetId();
+            if (!data.budget || data.budget.length === 0) {
+                compareChipContainer.classList.remove("d-flex", "flex-wrap", "gap-2");
+                compareChipContainer.innerHTML = `<div class="text-center">
+                        <i class="fa-solid fa-code-compare fa-4x text-secondary mb-3"></i>
+                        <h5 class="text-muted">No Budgets Available</h5>
+                        <p class="text-muted mb-0">
+                            Create a budget before comparing budgets.
+                        </p>
+                    </div>`;
+                return;
+            }
+
+            compareBtn.disabled = false;
+            compareDownloadCsvBtn.disabled = false;
+            compareDownloadPdfBtn.disabled = false;
+            compareChipContainer.classList.add("d-flex", "flex-wrap", "gap-2");
+            compareChipContainer.innerHTML = [...data.budget]
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map(budget => `<input type="checkbox"
+                        class="btn-check compare-budget-checkbox"
+                        id="compare_${budget.id}"
+                        value="${budget.id}"
+                        autocomplete="off">
+                    <label class="btn btn-sm btn-outline-primary rounded-pill"
+                        for="compare_${budget.id}">
+                        ${budget.id === activeBudgetId ? "🟢 " : ""}&nbsp;${budget.name}
+                    </label>`)
+                .join("");
+        }
+
+        function initializeBudgetDetailsModal() {
+            if (!data.budget || data.budget.length === 0) {
+                budgetDetailsContainer.innerHTML = `<div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fa-solid fa-wallet fa-4x text-secondary mb-3"></i>
+                        <h5 class="text-muted">No Budgets Found</h5>
+                        <p class="text-muted mb-0">
+                            Create your first budget to start tracking your spending.
+                        </p>
+                    </div>
+                </div>`;
+                return;
+            }
+            const activeBudgetId = getSelectedBudgetId();
+
+            budgetDetailsContainer.innerHTML = "";
+            const budgets = [...data.budget].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            budgetDetailsContainer.innerHTML = budgets.map(budget => {
+                const isActive = budget.id === activeBudgetId;
+                const transactions = data.transactions.filter(transaction => transaction.budgetId === budget.id);
+                const expenseTransactions = transactions.filter(transaction => transaction.category !== SPECIAL_CATEGORIES.BORROW && transaction.category !== SPECIAL_CATEGORIES.LEND);
+                const spent = expenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+                const remaining = budget.amount - spent;
+                const usage = budget.amount > 0 ? ((spent / budget.amount) * 100) : 0;
+                const youWillGet = transactions.filter(transaction => transaction.category === SPECIAL_CATEGORIES.LEND).reduce((sum, transaction) => sum + transaction.amount, 0);
+                const youWillPay = transactions.filter(transaction => transaction.category === SPECIAL_CATEGORIES.BORROW).reduce((sum, transaction) => sum + transaction.amount, 0);
+                const categoryTotals = {};
+                expenseTransactions.forEach(transaction => {
+                    categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
+                });
+
+                const categoryBadges =
+                    Object.entries(categoryTotals)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([categoryName, amount]) => {
+                            const category =
+                                data.categories.find(
+                                    c => c.name === categoryName
+                                );
+
+                            return `<span class="badge rounded-pill"
+                                        style="background:${category?.color || "#6c757d"}">
+                                        <i class="fa-solid ${category?.icon || "fa-box"} me-1"></i>
+                                        ${categoryName}
+                                        ₹${amount.toLocaleString()}
+                                    </span>`;
+                        })
+                        .join("");
+
+                return `<div class="col-12 col-md-6 col-lg-4">
+                <div class="card shadow-sm rounded-4 h-100 hover-effect
+                    ${isActive ? "border-success" : "border-secondary"}">
+                    <div class="card-header rounded-top-4
+                        ${isActive ? "bg-success-subtle" : ""}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fa-solid fa-briefcase"></i>
+                                Budget
+                            </h6>
+                            ${isActive ? `<span class="badge text-bg-success">Active</span>` : ""}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-wallet text-success"></i>
+                                Budget Amount
+                            </span>
+                            <span class="fw-semibold">
+                                ₹${budget.amount.toLocaleString()}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-calendar-days text-primary"></i>
+                                Budget Date
+                            </span>
+                            <span class="fw-semibold">
+                                ${formatDate(budget.startDate)} → ${formatDate(budget.endDate)}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-money-bill-trend-up text-danger"></i>
+                                Spent
+                            </span>
+                            <span class="fw-semibold text-danger">
+                                ₹${spent.toLocaleString()}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-piggy-bank text-success"></i>
+                                Remaining
+                            </span>
+                            <span class="fw-semibold text-success">
+                                ₹${remaining.toLocaleString()}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-receipt"></i>
+                                Transactions
+                            </span>
+                            <span class="fw-semibold">
+                                ${transactions.length}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-money-check-dollar text-danger"></i>
+                                You'll Pay
+                            </span>
+                            <span class="fw-semibold text-danger">
+                                ₹${youWillPay.toLocaleString()}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <i class="fa-solid fa-hand-holding-dollar text-success"></i>
+                                You'll Get
+                            </span>
+                            <span class="fw-semibold text-success">
+                                ₹${youWillGet.toLocaleString()}
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <small class="fw-semibold">
+                                Usage (${usage >= 80 ? "💀" : usage >= 50 ? "😟" : "😎"} ${Math.round(usage)}%)
+                            </small>
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated ${usage >= 80 ? "bg-danger" : usage >= 50 ? "bg-warning" : "bg-success"}" style="width:${usage}%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-3">
+                            ${categoryBadges || `<span class="badge text-bg-light">
+                                    No Categories
+                                </span>`}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            }).join("");
+        }
+
+        function downloadCompareCsv() {
+
+            const selectedBudgetIds = getSelectedCompareBudgets();
+            if (selectedBudgetIds.length < 2) {
+                Toast.warning("Select at least 2 budgets");
+                return;
+            }
+
+            const budgets = selectedBudgetIds.map(id => data.budget.find(b => b.id === id)).filter(Boolean);
+            const budgetTransactions = {};
+            const categoryTotalsByBudget = {};
+            const allCategoriesSet = new Set();
+
+            for (const transaction of data.transactions) {
+                const { budgetId, category, amount } = transaction;
+
+                if (!selectedBudgetIds.includes(budgetId)) {
+                    continue;
+                }
+
+                allCategoriesSet.add(category);
+                if (!budgetTransactions[budgetId]) {
+                    budgetTransactions[budgetId] = [];
+                }
+                budgetTransactions[budgetId].push(transaction);
+                if (!categoryTotalsByBudget[budgetId]) {
+                    categoryTotalsByBudget[budgetId] = {};
+                }
+                categoryTotalsByBudget[budgetId][category] ??= 0;
+                categoryTotalsByBudget[budgetId][category] += amount;
+            }
+
+            const csvRows = [
+                ["💰 Track My Spend Compare Report"],
+                [],
+                ["👤 Name", data.username || "User"],
+                ["📅 Report generated on", `"${new Date().toLocaleString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true
+                })}"`],
+                [],
+                ["📊 Compare Details", ...budgets.map(b => b.name)]
+            ];
+
+            const summaries = budgets.map(budget => {
+                const txns = budgetTransactions[budget.id] || [];
+                let spent = 0;
+                let highest = null;
+                let lowest = null;
+
+                for (const transaction of txns) {
+                    if (transaction.category !== SPECIAL_CATEGORIES.BORROW && transaction.category !== SPECIAL_CATEGORIES.LEND) {
+                        spent += transaction.amount;
+                    }
+                    if (!highest || transaction.amount > highest.amount) {
+                        highest = transaction;
+                    }
+                    if (!lowest || transaction.amount < lowest.amount) {
+                        lowest = transaction;
+                    }
+                }
+
+                const remaining = budget.amount - spent;
+
+                return {
+                    budgetAmount: budget.amount,
+                    spent,
+                    remaining,
+                    usage: budget.amount ? Math.round((spent / budget.amount) * 100) : 0,
+                    transactionCount: txns.length,
+                    highest,
+                    lowest
+                };
+            });
+            csvRows.push(
+                ["💰 Budget Amount", ...summaries.map(s => `₹${s.budgetAmount}`)],
+                ["📉 Spent", ...summaries.map(s => `₹${s.spent}`)],
+                ["💵 Remaining", ...summaries.map(s => `₹${s.remaining}`)],
+                ["📈 Budget Usage", ...summaries.map(s => `${s.usage}%`)],
+                ["🧾 Transactions", ...summaries.map(s => s.transactionCount)],
+                ["🏆 Highest Expense", ...summaries.map(s => s.highest ? `${getCategoryEmoji(s.highest.category)} ${s.highest.category} (₹${s.highest.amount})` : "N/A")],
+                ["📉 Lowest Expense", ...summaries.map(s => s.lowest ? `${getCategoryEmoji(s.lowest.category)} ${s.lowest.category} (₹${s.lowest.amount})` : "N/A")],
+                [],
+                ["📊 Category-wise Breakdown", ...budgets.map(b => b.name)]
+            );
+
+            const allCategories = [...allCategoriesSet];
+            for (const category of allCategories) {
+                csvRows.push([
+                    `${getCategoryEmoji(category)} ${category}`,
+                    ...budgets.map(budget =>
+                        `₹${(
+                            categoryTotalsByBudget[budget.id]?.[category] || 0
+                        )}`
+                    )
+                ]);
+            }
+
+            csvRows.push([], [`❤️ Built by AKN • © ${new Date().getFullYear()} 💰 Track My Spend`]);
+
+            const csv = csvRows.map(row => row.join(",")).join("\n");
+            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "TMS-Compare-Report.csv";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function getCategoryEmoji(categoryName) {
+            return data.categories.find(c => c.name === categoryName)?.emoji || "📦";
+        }
+
+        function getSelectedCompareBudgets() {
+            return [...document.querySelectorAll("#compare_chip_container input:checked")].map(input => input.value);
+        }
+
+        function getRandomFooterTagline() {
+            const taglines = [
+                '<i class="fa-solid fa-wallet text-success"></i> <span class="fw-semibold">Track smarter.</span> Spend better.',
+                '<i class="fa-solid fa-chart-line text-primary"></i> Every expense tells a story. Make yours a success.',
+                '<i class="fa-solid fa-piggy-bank text-warning"></i> Small savings today. Bigger dreams tomorrow.',
+                '<i class="fa-solid fa-bullseye text-danger"></i> Every rupee has a purpose. Stay focused on your goals.',
+                '<i class="fa-solid fa-coins text-warning"></i> Better habits. Stronger finances. Brighter future.',
+                '<i class="fa-solid fa-receipt text-info"></i> Every transaction tracked. Every decision informed.',
+                '<i class="fa-solid fa-seedling text-success"></i> Grow your savings one smart choice at a time.',
+                '<i class="fa-solid fa-trophy text-warning"></i> Financial discipline today. Financial freedom tomorrow.',
+                '<i class="fa-solid fa-lightbulb text-warning"></i> Know where your money goes. Control where it grows.',
+                '<i class="fa-solid fa-rocket text-primary"></i> Your financial journey starts with a single tracked expense.'
+            ];
+            return taglines[
+                Math.floor(Math.random() * taglines.length)
+            ];
+        }
+
+        function handleSearchToggle(e) {
+            e.preventDefault();
+            searchActive ? closeSearch() : openSearch();
+        }
+
+        function handleSearchKeyDown(e) {
+            if (e.key === "Escape") closeSearch();
+        }
+
+        function handleSearchInput() {
+            const query = searchInput.value.trim();
+            if (query) {
+                searchClearBtn.classList.remove("d-none");
+                renderSearchResults(query);
+            } else {
+                searchClearBtn.classList.add("d-none");
+                searchCount.classList.add("d-none");
+                renderTransactionsAccordion();
+            }
+        }
+
+        function handleSearchClear() {
+            searchInput.value = "";
+            searchClearBtn.classList.add("d-none");
+            searchCount.classList.add("d-none");
+            renderTransactionsAccordion();
+            searchInput.focus();
+        }
+
+        function openSearch() {
+            searchActive = true;
+            searchRow.classList.remove("d-none");
+            searchInput.focus();
+        }
+
+        function closeSearch() {
+            searchActive = false;
+            searchInput.value = "";
+            searchRow.classList.add("d-none");
+            searchClearBtn.classList.add("d-none");
+            searchCount.classList.add("d-none");
+            renderTransactionsAccordion();
+        }
+
+        function renderSearchResults(query) {
+            const q = query.toLowerCase();
+            const budgetId = getSelectedBudgetId();
+
+            const matches = data.transactions.filter(t => {
+                if (t.budgetId !== budgetId) return false;
+                return (
+                    t.category.toLowerCase().includes(q) ||
+                    (t.note || "").toLowerCase().includes(q) ||
+                    String(t.amount).includes(q) ||
+                    t.date.includes(q)
+                );
+            });
+
+            searchCount.textContent = `${matches.length} result${matches.length === 1 ? "" : "s"}`;
+            searchCount.classList.remove("d-none");
+
+            if (!matches.length) {
+                transactionsAccordion.innerHTML = `<div class="card shadow-sm rounded-4 border-secondary">
+                                        <div class="card-body text-center py-5">
+                                            <i class="fa-solid fa-magnifying-glass fa-3x text-secondary mb-3"></i>
+                                            <h6 class="text-muted mb-1">No Results Found</h6>
+                                            <small class="text-muted">Try a different keyword.</small>
+                                        </div>
+                                    </div>`;
+                return;
+            }
+
+            const grouped = matches.reduce((acc, t) => {
+                acc[t.date] = acc[t.date] || [];
+                acc[t.date].push(t);
+                return acc;
+            }, {});
+
+            transactionsAccordion.innerHTML = Object.entries(grouped)
+                .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                .map(([date, items]) => {
+                    const total = items.reduce((s, t) => s + t.amount, 0);
+                    return `<div class="accordion-item rounded-4 mb-2">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#search_${date.replaceAll("-", "")}">
+                            <div class="d-flex justify-content-between align-items-center w-100 me-1">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-calendar-days text-primary fa-2x me-1"></i>
+                                    <div>
+                                        <div class="fw-bold">
+                                            ${new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                        </div>
+                                        <small class="text-muted">${items.length} match${items.length === 1 ? "" : "es"}</small>
+                                    </div>
+                                </div>
+                                <span class="badge text-bg-danger">₹${total.toLocaleString()}</span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="search_${date.replaceAll("-", "")}" class="accordion-collapse collapse show">
+                        <div class="accordion-body p-3 pb-2">
+                            <div class="list-group list-group-flush">
+                                ${[...items]
+                            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                            .map(renderTransactionItem)
+                            .join("")}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                }).join("");
+        }
+
+        function handleBudgetChange(e) {
+            mobileBudgetSelect.value = getSelectedBudgetId();
+            updateDashboard();
+            renderTransactionsAccordion();
+            initializeTransactionForm();
+        }
+
+        function generateBudgetId(startDate, endDate) {
+            return `BUD-${startDate.replaceAll("-", "")}-${endDate.replaceAll("-", "")}`;
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "2-digit"
+            }).replaceAll(" ", "-");
+        }
+
+        function isValidName(name) {
+            return /^[A-Za-z ]{3,30}$/.test(name.trim());
+        }
+
+        function getSelectedBudgetId() {
+            return budgetSelect.value;
+        }
+
+        function getActiveBudget() {
+            return data.budget.find(
+                budget => budget.id === getSelectedBudgetId()
+            );
+        }
+
+        async function saveData() {
+            await IndexedDBService.save(STORAGE_KEY, data);
+        }
+
+        async function loadData() {
+            return await IndexedDBService.get(STORAGE_KEY, data);
+        }
+
+        function createToast(message, type = "info") {
+            // Remove any existing toast container
+            const oldContainer = document.querySelector(".toast-container");
+            if (oldContainer) {
+                oldContainer.remove();
+            }
+
+            // Create new toast container
+            const container = document.createElement("div");
+            container.className = "toast-container position-fixed top-0 start-50 translate-middle-x p-3";
+            document.body.appendChild(container);
+
+            // Create toast element
+            const toastEl = document.createElement("div");
+            toastEl.className = `toast align-items-center ${COLORS[type] || COLORS.info}`;
+            toastEl.setAttribute("role", "alert");
+            toastEl.setAttribute("aria-live", "assertive");
+            toastEl.setAttribute("aria-atomic", "true");
+            toastEl.dataset.bsDelay = "5000";
+
+            // Create toast body
+            const toastBody = document.createElement("div");
+            toastBody.className = "toast-body text-center";
+
+            // Create icon span
+            const icon = document.createElement("i");
+            icon.className = ICONS[type] || ICONS.info;
+            icon.setAttribute("aria-hidden", "true");
+
+            // Add icon and message
+            toastBody.appendChild(icon);
+            toastBody.appendChild(document.createTextNode("\u00A0"));
+            toastBody.appendChild(document.createTextNode(message));
+
+            toastEl.appendChild(toastBody);
+            container.appendChild(toastEl);
+
+            // Show toast using Bootstrap's API
+            const toastInstance = bootstrap.Toast.getOrCreateInstance(toastEl);
+            toastInstance.show();
+
+            // Remove the container after toast disappears
+            toastEl.addEventListener("hidden.bs.toast", () => container.remove());
+        }
+
+        const Toast = {
+            success: (msg) => createToast(msg, "success"),
+            warning: (msg) => createToast(msg, "warning"),
+            danger: (msg) => createToast(msg, "danger"),
+            info: (msg) => createToast(msg, "info"),
+        };
+
+    </script>
+</body>
+
+</html>
